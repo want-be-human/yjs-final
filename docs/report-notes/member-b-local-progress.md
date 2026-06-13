@@ -91,3 +91,26 @@
 - 推送训练镜像到 SWR。
 - CCE 上 2 Worker Pod 训练日志截图。
 - 单机训练时间和分布式训练时间对比。
+
+### 附加题 1 监控系统
+
+- 已确认离线包提供 `monitoring-all.tar`、`kube-prometheus-stack-83.7.0.tgz` 和 `monitoring-values.yaml`。
+- 已在 `deploy/k8s/monitoring/` 放置部署说明和 values 模板。
+- 已整理 `docs/report-notes/monitoring-report-notes.md`，包含 Prometheus Pull 原理、截图清单和指标说明。
+
+待补：
+- 把监控镜像加载、重新 tag 到个人 SWR 并推送。
+- 替换 `<region>` 和 `<your-organization>`。
+- CCE 上安装 kube-prometheus-stack。
+- 保存 Grafana 节点 CPU 折线图和 Pod 内存柱状图截图。
+
+### 附加题 2 CI/CD 流水线
+
+- 已新增 `.github/workflows/deploy.yml`。
+- Workflow 会构建前端/后端镜像、推送 SWR，并更新 `backend`、`frontend` Deployment 镜像 tag。
+- 已整理 `docs/report-notes/cicd-report-notes.md`，包含 Secrets 清单和报告说明点。
+
+待补：
+- 在 GitHub 仓库配置 `SWR_REGISTRY`、`SWR_ORG`、`SWR_USERNAME`、`SWR_PASSWORD`、`KUBE_CONFIG`。
+- 首次运行前确认 CCE 上已有 `backend` 和 `frontend` Deployment。
+- 保存 GitHub Actions Passed、SWR 新 tag、Deployment 镜像更新截图。

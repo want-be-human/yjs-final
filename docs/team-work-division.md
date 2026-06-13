@@ -4,13 +4,13 @@
 
 - 第二部分：方向 B，MPI 并行科学计算
 - 算法题：数值积分（梯形法）
-- 附加题：C-1 分布式 AI 训练
+- 附加题：监控系统、CI/CD 流水线、C-1 分布式 AI 训练都尽量完成
 
 原则：
 
 - 两个人都要接触第一部分和第二部分，避免答辩时只有一个人说得清。
 - 成员 A 偏云平台、后端、存储、MPI 环境。
-- 成员 B 偏前端配置、弹性伸缩、MPI 性能分析、分布式 AI 训练。
+- 成员 B 偏前端配置、弹性伸缩、MPI 性能分析、监控系统、CI/CD 流水线和分布式 AI 训练。
 - 最终报告分工比例建议写 50% / 50%。
 
 ## 成员 A
@@ -70,6 +70,13 @@ B-1：并行算法实现，10 分
 - 写或整理单机 MNIST CNN 训练代码。
 - 记录单机训练时间，作为分布式训练对比基线。
 - 协助准备训练镜像 Dockerfile。
+
+### 附加题：监控系统和 CI/CD 配合项
+
+- 提供 CCE 集群、KubeConfig 和节点状态截图。
+- 提供 SWR Region、组织名和镜像推送权限。
+- 协助确认 GitHub Actions 使用的 `KUBE_CONFIG`、SWR 登录 Secrets 和 Deployment 名称。
+- 协助验证流水线更新后端 Deployment 镜像 tag 后，`/api/ping` 仍能访问。
 
 ### 报告负责部分
 
@@ -151,11 +158,28 @@ B-3：非阻塞通信优化，5 分
 - 写数据并行和模型并行区别。
 - 整理不少于 1500 字专题内容。
 
+### 附加题：监控系统，+5 分
+
+- 使用离线包中的 `kube-prometheus-stack` Chart 和 `monitoring-all.tar`。
+- 把监控镜像加载、重新 tag 到个人 SWR，并配合成员 A 推送。
+- 修改 `deploy/k8s/monitoring/monitoring-values.template.yaml` 中的 Region 和组织名。
+- 在 CCE 上部署 Prometheus + Grafana。
+- 保存监控 Pod 状态、Grafana 节点 CPU 折线图、Pod 内存柱状图截图。
+- 写 Prometheus Pull 采集原理和至少 3 个指标含义。
+
+### 附加题：CI/CD 流水线，+5 分
+
+- 维护 `.github/workflows/deploy.yml`。
+- 配置 GitHub Secrets 的说明和截图素材。
+- 验证代码提交后自动构建前后端镜像、推送 SWR、更新 K8s Deployment。
+- 保存 GitHub Actions Passed 截图和 Deployment 镜像 Tag 更新截图。
+- 写持续集成、持续部署和 GitOps 的区别说明。
+
 ### 报告负责部分
 
 - 第一部分任务 5-6，以及任务 3 的 Service 验证。
 - 第二部分 B-2、B-3。
-- 附加题 C-1 分布式训练主体。
+- 附加题监控系统、CI/CD 流水线和 C-1 分布式训练主体。
 - 性能图表和 Amdahl 分析。
 
 ## 共同完成
@@ -169,8 +193,8 @@ B-3：非阻塞通信优化，5 分
 
 ## 报告里可写的分工描述
 
-成员 A：主要负责后端服务与 Redis 容器化、本地联调、SWR 后端镜像推送、CCE 集群配置、后端与 Redis 的 K8s 部署、PVC 持久化验证，以及 MPI Operator 部署、示例 MPIJob 运行和数值积分基础并行版实现。
+成员 A：主要负责后端服务与 Redis 容器化、本地联调、SWR 后端镜像推送、CCE 集群配置、后端与 Redis 的 K8s 部署、PVC 持久化验证，以及 MPI Operator 部署、示例 MPIJob 运行和数值积分基础并行版实现；同时配合监控和 CI/CD 提供云资源、KubeConfig、SWR 权限和部署验证。
 
-成员 B：主要负责前端 Nginx 页面与反向代理配置、前端镜像推送、Service 暴露、ConfigMap Volume 挂载、HPA 弹性伸缩验证、MPI 性能测试与 Amdahl 分析、非阻塞通信优化，以及分布式 AI 训练附加题。
+成员 B：主要负责前端 Nginx 页面与反向代理配置、前端镜像推送、Service 暴露、ConfigMap Volume 挂载、HPA 弹性伸缩验证、MPI 性能测试与 Amdahl 分析、非阻塞通信优化，以及监控系统、CI/CD 流水线和分布式 AI 训练附加题。
 
 共同完成实验报告整合、截图检查、问题排查和最终提交。分工比例：成员 A 50%，成员 B 50%。

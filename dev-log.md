@@ -36,3 +36,19 @@
 
 - WSL 里目前没有 `mpi4py`，MPI 结果一致、性能测试、非阻塞对比暂时不能真实运行。
 - 云上相关内容还缺 SWR 组织名、镜像推送、CCE KubeConfig、ELB IP、HPA 扩缩容截图和 AI 训练 Pod 日志。
+
+## 2026-06-14
+
+- 检查 `离线包/README.md` 和离线包目录，确认里面已有 MPI 和监控系统继续推进所需资源：`mpi4py-latest.tar`、`mpi-operator.yaml`、`monitoring-all.tar`、`kube-prometheus-stack-83.7.0.tgz` 和 `monitoring-values.yaml`。
+- 确认离线包不包含 CI/CD 所需的 GitHub Secrets、SWR 登录信息、CCE KubeConfig，也没有 C-1 PyTorch DDP 训练镜像。
+- 将附加题 1 监控系统和附加题 2 CI/CD 流水线补进成员 B 指导书；成员 A 指导书补充云资源、SWR 和 KubeConfig 配合项。
+- 更新 `team-work-division.md`，把监控系统、CI/CD 流水线和 C-1 都纳入附加题分工。
+- 新增 `deploy/k8s/monitoring/`，放监控部署说明和 `monitoring-values.template.yaml`，保留 `<region>`、`<your-organization>` 占位。
+- 新增 `.github/workflows/deploy.yml`，用于构建前后端镜像、推送 SWR、更新 CCE Deployment；所有敏感值均从 GitHub Secrets 读取。
+- 新增 `docs/report-notes/offline-resources.md`、`monitoring-report-notes.md`、`cicd-report-notes.md`，整理离线资源、监控报告素材和 CI/CD 报告素材。
+
+遗留：
+
+- 监控系统部署还需要真实 Region、SWR 组织名、SWR 登录信息、CCE KubeConfig 和 Grafana 截图。
+- CI/CD 还需要在 GitHub 仓库配置 `SWR_REGISTRY`、`SWR_ORG`、`SWR_USERNAME`、`SWR_PASSWORD`、`KUBE_CONFIG`。
+- C-1 分布式 AI 训练仍需联网构建 PyTorch 训练镜像并推送 SWR，或由用户提供可用训练镜像。

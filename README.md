@@ -6,7 +6,7 @@
 
 - 第二部分：方向 B，MPI 并行科学计算
 - 算法题：数值积分（梯形法）
-- 附加题：C-1 分布式 AI 训练
+- 附加题：监控系统、CI/CD 流水线、C-1 分布式 AI 训练
 - 开发和运行环境：WSL
 
 ## 目录
@@ -15,6 +15,7 @@
 - `app/frontend/`：Nginx 前端页面、反向代理配置和前端镜像构建文件
 - `deploy/k8s/app/`：第一部分应用部署相关 YAML
 - `deploy/k8s/mpi/`：第二部分 MPIJob 和 MPI Operator 相关文件
+- `deploy/k8s/monitoring/`：监控系统附加题部署说明和 values 模板
 - `deploy/k8s/ai-training/`：附加题分布式 AI 训练相关部署文件
 - `mpi/`：数值积分串行版、MPI 并行版、非阻塞优化版和性能测试文件
 - `ai-training/`：MNIST 单机训练和分布式训练文件
@@ -57,5 +58,8 @@ docker compose logs -f backend
 - 推送前后端镜像到 SWR 并截图
 - 替换 K8s YAML 里的真实 SWR 组织名
 - 运行 MPI 性能测试并生成真实图表
+- 推送离线包里的 MPI 和监控镜像到 SWR
+- 在 CCE 上部署 Prometheus + Grafana 并截图
+- 配置 GitHub Actions Secrets，跑通 CI/CD 流水线
 - 运行分布式 AI 训练并补真实日志
 - 云上部署、验证和截图

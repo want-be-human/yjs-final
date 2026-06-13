@@ -2,7 +2,7 @@
 
 ## 负责范围
 
-成员 B 主要负责第一部分中的前端、Service 暴露、ConfigMap Volume、HPA 弹性伸缩，以及第二部分 MPI 的性能测试、Amdahl 分析、非阻塞通信优化和附加题分布式 AI 训练主体。
+成员 B 主要负责第一部分中的前端、Service 暴露、ConfigMap Volume、HPA 弹性伸缩，以及第二部分 MPI 的性能测试、Amdahl 分析、非阻塞通信优化和附加题监控系统、CI/CD 流水线、分布式 AI 训练主体。
 
 成员 B 可以在 Windows 环境下结合编辑器和辅助工具编写代码，但运行、测试、构建镜像和部署统一在 WSL 环境下完成。
 
@@ -15,6 +15,8 @@
 - 第二部分方向 B：B-1 并行算法实现
 - 第二部分方向 B：B-2 性能测试与 Amdahl 分析
 - 第二部分方向 B：B-3 非阻塞通信优化
+- 附加题 1：监控系统
+- 附加题 2：CI/CD 流水线
 - 附加题 C-1：分布式 AI 训练
 
 ## 第一部分任务要求
@@ -242,6 +244,70 @@
 - 截图和日志要能证明实验可运行。
 - 这个任务需要和成员 A 联调，因为时间对比依赖 A 的单机训练基线。
 
+## 附加题 1：监控系统
+
+负责内容：
+
+- 使用离线包中的 kube-prometheus-stack Helm Chart。
+- 加载 `monitoring-all.tar`，把监控相关镜像重新打 tag 到个人 SWR。
+- 修改监控 values 中的 `<region>` 和 `<your-organization>`。
+- 在 CCE 上部署 Prometheus + Grafana。
+- 整理 Grafana Dashboard 截图和指标说明。
+
+文件位置：
+
+- 离线资源在 `离线包/monitoring/`。
+- 监控部署说明和 values 模板放在 `deploy/k8s/monitoring/`。
+- 报告素材放在 `docs/report-notes/monitoring-report-notes.md`。
+- 截图放在 `docs/screenshots/`。
+
+注意事项：
+
+- 不能把 SWR 临时 Token、AK、SK 或 KubeConfig 写进仓库。
+- `monitoring-values.template.yaml` 只保留占位符，真实 Region 和组织名部署时再替换。
+- Grafana 截图要至少包含节点 CPU 利用率折线图和各 Pod 内存使用柱状图。
+- 报告中要说明 Prometheus Pull 采集原理，并解释至少 3 个指标含义。
+- 这个任务需要成员 A 提供 CCE、SWR 权限和 KubeConfig。
+
+实验记录提醒：
+
+- 保存 `helm list -n monitoring` 截图。
+- 保存 `kubectl get pods -n monitoring` 截图。
+- 保存 Grafana Dashboard 截图。
+- 如果 Dashboard 没数据，保存 Prometheus targets 或 Pod 日志排查截图。
+
+## 附加题 2：CI/CD 流水线
+
+负责内容：
+
+- 维护 GitHub Actions workflow。
+- 自动构建前端和后端镜像。
+- 推送镜像到 SWR。
+- 更新 K8s Deployment 镜像 tag。
+- 整理流水线 Passed 截图和 Deployment 更新截图。
+
+文件位置：
+
+- Workflow 放在 `.github/workflows/deploy.yml`。
+- 报告素材放在 `docs/report-notes/cicd-report-notes.md`。
+- 截图放在 `docs/screenshots/`。
+
+注意事项：
+
+- 所有敏感信息都放 GitHub Secrets，不写进仓库。
+- 需要的 Secrets：`SWR_REGISTRY`、`SWR_ORG`、`SWR_USERNAME`、`SWR_PASSWORD`、`KUBE_CONFIG`。
+- 当前 workflow 默认更新 `deployment/backend` 和 `deployment/frontend`。
+- 第一次运行前需要确保 CCE 上已经存在对应 Deployment。
+- 报告中要说明持续集成、持续部署和 GitOps 的区别。
+- 这个任务需要成员 A 提供 SWR 登录信息、KubeConfig 和云上 Deployment 验证。
+
+实验记录提醒：
+
+- 保存 GitHub Actions 全部阶段 Passed 截图。
+- 保存 SWR 镜像 tag 截图。
+- 保存 Deployment 镜像 tag 已更新截图。
+- 保存更新后 `/api/ping` 仍可访问的截图。
+
 ## 报告注意事项
 
 成员 B 负责整理：
@@ -250,6 +316,8 @@
 - 第一部分任务 3 中 Service 和公网访问验证。
 - 第二部分 B-2、B-3。
 - 第二部分 B-1 的结果一致截图和通信示意图。
+- 附加题 1 监控系统。
+- 附加题 2 CI/CD 流水线。
 - 附加题 C-1 分布式训练主体。
 
 第一部分实验记录必须包含：

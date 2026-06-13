@@ -1,0 +1,50 @@
+name: build-and-deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  BACKEND_IMAGE: yjs-backend
+  FRONTEND_IMAGE: yjs-frontend
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Login to SWR
+        run: echo "${{ secrets.SWR_PASSWORD }}" | docker login "${{ secrets.SWR_REGISTRY }}" -u "${{ secrets.SWR_USERNAME }}" --password-stdin
+
+      - name: Build backend image
+        run: |
+          docker build -t "${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${BACKEND_IMAGE}:${IMAGE_TAG}" -f app/backend/Dockerfile.backend app/backend
+
+      - name: Build frontend image
+        run: |
+          docker build -t "${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${FRONTEND_IMAGE}:${IMAGE_TAG}" -f app/frontend/Dockerfile.frontend app/frontend
+
+      - name: Push images
+        run: |
+          docker push "${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${BACKEND_IMAGE}:${IMAGE_TAG}"
+          docker push "${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${FRONTEND_IMAGE}:${IMAGE_TAG}"
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Update deployments
+        run: |
+          kubectl set image deployment/backend backend="${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${BACKEND_IMAGE}:${IMAGE_TAG}"
+          kubectl set image deployment/frontend frontend="${{ secrets.SWR_REGISTRY }}/${{ secrets.SWR_ORG }}/${FRONTEND_IMAGE}:${IMAGE_TAG}"
+          kubectl rollout status deployment/backend --timeout=180s
+          kubectl rollout status deployment/frontend --timeout=180s
