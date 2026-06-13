@@ -1,0 +1,36 @@
+apiVersion: kubeflow.org/v1
+kind: MPIJob
+metadata:
+  name: integral-mpi
+  namespace: default
+spec:
+  slotsPerWorker: 2
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          containers:
+            - name: launcher
+              image: swr.cn-north-4.myhuaweicloud.com/<YOUR_ORG>/mpi4py:latest
+              command:
+                - mpirun
+                - -n
+                - "4"
+                - python
+                - /opt/mpi/integral_mpi.py
+                - --steps
+                - "10000000"
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          containers:
+            - name: worker
+              image: swr.cn-north-4.myhuaweicloud.com/<YOUR_ORG>/mpi4py:latest
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: "1Gi"
