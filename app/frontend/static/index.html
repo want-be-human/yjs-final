@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>云计算课程设计 Task 1</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        background: #eef4f1;
+        color: #17231f;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(78, 128, 112, 0.2), transparent 38%),
+          linear-gradient(315deg, rgba(236, 177, 87, 0.24), transparent 34%),
+          #eef4f1;
+      }
+
+      main {
+        width: min(720px, calc(100vw - 40px));
+        padding: 36px;
+        border: 1px solid rgba(23, 35, 31, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 22px 70px rgba(37, 58, 50, 0.14);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 5vw, 46px);
+      }
+
+      p {
+        line-height: 1.8;
+        margin: 10px 0;
+      }
+
+      code {
+        padding: 3px 7px;
+        border-radius: 5px;
+        background: #dfe9e5;
+      }
+
+      button {
+        margin-top: 18px;
+        border: 0;
+        border-radius: 6px;
+        padding: 12px 18px;
+        background: #245b49;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      pre {
+        min-height: 72px;
+        margin-top: 18px;
+        padding: 16px;
+        overflow: auto;
+        border-radius: 6px;
+        background: #12231d;
+        color: #d7fff1;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>云计算课程设计 Task 1</h1>
+      <p>学生信息：<strong>2023112605乔鹏博</strong></p>
+      <p>当前页面由 <code>Nginx</code> 提供，按钮会请求 <code>Flask /api/ping</code>，后端会连接 <code>Redis</code> 记录访问次数。</p>
+      <button id="pingBtn" type="button">测试后端接口</button>
+      <pre id="result">等待请求...</pre>
+    </main>
+
+    <script>
+      const button = document.querySelector("#pingBtn");
+      const result = document.querySelector("#result");
+
+      button.addEventListener("click", async () => {
+        result.textContent = "请求中...";
+        try {
+          const response = await fetch("/api/ping");
+          const data = await response.json();
+          result.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          result.textContent = `请求失败：${error.message}`;
+        }
+      });
+    </script>
+  </body>
+</html>
