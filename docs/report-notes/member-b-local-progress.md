@@ -5,9 +5,9 @@
 ### 任务1 应用容器化
 
 - 前端页面在 `app/frontend/static/index.html`，已包含学号和姓名。
-- 前端 Dockerfile 在 `app/frontend/Dockerfile`，按任务书 Nginx 静态页模板写。
+- 前端 Dockerfile 在 `app/frontend/Dockerfile.frontend`，按任务书 Nginx 静态页模板写。
 - Nginx 反向代理配置在 `app/frontend/nginx.conf`，本地走 `backend:5000`。
-- `compose.yaml` 已包含前端、后端和 Redis，本地运行需要在 WSL 里执行。
+- `docker-compose.yml` 已包含前端、后端和 Redis，本地运行需要在 WSL 里执行。
 - 已在 WSL 中执行 `docker compose up --build -d`，三个容器均启动成功。
 - 已通过 `curl http://localhost:8080/api/ping` 验证 Nginx 到 Flask 到 Redis 链路，返回 `status=ok`、`redis=ok`。
 
@@ -20,7 +20,7 @@
 
 - `deploy/k8s/app/service.yaml` 已写后端 `LoadBalancer` Service，并加 `kubernetes.io/elb.class: union`。
 - 同文件已写 Redis `ClusterIP` Service。
-- 为了能完整 apply，本地补了后端、Redis、ConfigMap、Secret、PVC 等 YAML。
+- 为了能完整 apply，本地补了后端、Redis、ConfigMap、Secret、PVC 等 YAML，其中任务书模板文件名已对齐为 `deployment.yaml`、`configmap.yaml`、`secret.yaml`。
 
 待补：
 - 把 `<YOUR_ORG>` 替换成真实 SWR 组织名。
@@ -51,6 +51,8 @@
 
 - `mpi/integral_serial.py` 是串行梯形法。
 - `mpi/integral_mpi.py` 是阻塞 MPI 版，使用 `scatter` 分发区间、`reduce` 汇总积分。
+- `mpi/pi_mpi.py` 是任务书 B-0 的 MPIJob 入门验证示例。
+- `mpi/Dockerfile` 可构建包含本仓库 MPI 脚本的 `yjs-mpi:v1` 镜像，避免 MPIJob 引用的 `/opt/mpi/*.py` 在基础镜像里不存在。
 - `docs/report-notes/mpi-communication.md` 已放通信示意素材。
 
 待补：

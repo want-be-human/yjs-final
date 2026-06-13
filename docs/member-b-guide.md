@@ -33,8 +33,8 @@
 
 - 前端页面放在 `app/frontend/static/`。
 - Nginx 配置放在 `app/frontend/nginx.conf`。
-- 前端 Dockerfile 放在 `app/frontend/Dockerfile`。
-- 本地联调用 `compose.yaml`。
+- 前端 Dockerfile 放在 `app/frontend/Dockerfile.frontend`。
+- 本地联调用 `docker-compose.yml`。
 - 截图和报告素材放在 `docs/screenshots/` 或 `docs/report-notes/`。
 
 注意事项：

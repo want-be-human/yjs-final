@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v1
 kind: MPIJob
 metadata:
-  name: integral-mpi
+  name: mpi-pi
   namespace: default
 spec:
   slotsPerWorker: 2
@@ -20,9 +20,7 @@ spec:
                 - -n
                 - "4"
                 - python
-                - /opt/mpi/integral_mpi.py
-                - --steps
-                - "10000000"
+                - /opt/mpi/pi_mpi.py
     Worker:
       replicas: 2
       template:

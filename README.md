@@ -49,13 +49,13 @@ docker compose logs -f backend
 
 ## 当前进度
 
-`app/backend/`、`app/frontend/` 和 `compose.yaml` 已覆盖第一部分任务 1 的本地代码基础。
+`app/backend/`、`app/frontend/` 和 `docker-compose.yml` 已覆盖第一部分任务 1 的本地代码基础。
 
 后续还需要：
 
-- 在 WSL 中实际运行并截图
+- 补前端页面、后端日志等截图
 - 推送前后端镜像到 SWR 并截图
-- 补齐第一部分 K8s YAML
-- 补齐 MPI 数值积分代码
-- 补齐分布式 AI 训练代码
+- 替换 K8s YAML 里的真实 SWR 组织名
+- 运行 MPI 性能测试并生成真实图表
+- 运行分布式 AI 训练并补真实日志
 - 云上部署、验证和截图

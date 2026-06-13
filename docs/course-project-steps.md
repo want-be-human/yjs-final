@@ -56,10 +56,10 @@
 
 - `backend/app.py`
 - `backend/requirements.txt`
-- `backend/Dockerfile`
+- `backend/Dockerfile.backend`
 - `frontend/static/index.html`
 - `frontend/nginx.conf`
-- `frontend/Dockerfile`
+- `frontend/Dockerfile.frontend`
 - `docker-compose.yml`
 
 要求：
@@ -100,7 +100,7 @@ kubectl get nodes -o wide
 
 需要准备这些 YAML：
 
-- `k8s/backend-deployment.yaml`
+- `k8s/deployment.yaml`
 - `k8s/redis-deployment.yaml`
 - `k8s/service.yaml`
 - `k8s/configmap.yaml`

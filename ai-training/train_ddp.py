@@ -48,7 +48,7 @@ def train(args):
         device = torch.device("cpu")
 
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    dataset = datasets.MNIST(args.data_dir, train=True, download=(rank == 0), transform=transform)
+    dataset = datasets.MNIST(args.data_dir, train=True, download=True, transform=transform)
     dist.barrier()
 
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True)

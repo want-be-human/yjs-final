@@ -32,8 +32,8 @@
 文件位置：
 
 - 后端代码和依赖文件放在 `app/backend/`。
-- 后端 Dockerfile 放在 `app/backend/Dockerfile`。
-- 本地联调用 `compose.yaml`。
+- 后端 Dockerfile 放在 `app/backend/Dockerfile.backend`。
+- 本地联调用 `docker-compose.yml`。
 - 截图和报告素材放在 `docs/screenshots/` 或 `docs/report-notes/`。
 
 注意事项：
