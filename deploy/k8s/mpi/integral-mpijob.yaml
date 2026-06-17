@@ -1,4 +1,4 @@
-apiVersion: kubeflow.org/v1
+apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: integral-mpi
@@ -6,7 +6,7 @@ metadata:
 spec:
   slotsPerWorker: 2
   runPolicy:
-    cleanPodPolicy: Running
+    cleanPodPolicy: None
   mpiReplicaSpecs:
     Launcher:
       replicas: 1
@@ -14,9 +14,11 @@ spec:
         spec:
           containers:
             - name: launcher
-              image: swr.cn-north-4.myhuaweicloud.com/<YOUR_ORG>/yjs-mpi:v1
+              image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
               command:
                 - mpirun
+                - --allow-run-as-root
+                - --oversubscribe
                 - -n
                 - "4"
                 - python
@@ -29,7 +31,7 @@ spec:
         spec:
           containers:
             - name: worker
-              image: swr.cn-north-4.myhuaweicloud.com/<YOUR_ORG>/yjs-mpi:v1
+              image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
               resources:
                 requests:
                   cpu: "1"

@@ -96,6 +96,19 @@ kubectl get nodes -o wide
 - `STATUS` 为 `Ready`
 - 包含 `VERSION` 列
 
+当前云上进度：
+
+- Region：华北-北京四（`cn-north-4`）。
+- CCE 集群：`yjs-final-cluster`。
+- Kubernetes 版本：`v1.35.3-r0-35.0.8`。
+- Worker 节点：2 个，均已通过 `kubectl get nodes -o wide` 验证为 `Ready`。
+- 节点规格：`c9.large.2`，2 vCPU / 4 GiB，Ubuntu 22.04，containerd。
+- 后续因 Metrics Server 和 HPA 压测资源不足，按任务书建议新增 1 个 2 vCPU / 8 GiB Worker 节点。
+- SWR 组织：`yjs-final-2023112473`。
+- 已推送镜像：
+  - `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1`
+  - `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-frontend:v1`
+
 ### 4. 部署应用到 CCE
 
 需要准备这些 YAML：
@@ -150,6 +163,15 @@ curl http://<ELB_IP>/api/ping
 - 所有 Pod 都是 `Running`
 - `/api/ping` 返回 `{"status":"ok"}`
 
+当前完成情况：
+
+- 已部署 backend、frontend、Redis、PVC、ConfigMap、Secret 和 Service。
+- 后端 Deployment 保持 2 个副本，前端 1 个副本，Redis 1 个副本。
+- 因节点资源紧张，后端和 Redis 的资源请求已适当调低；后端滚动更新策略改为 `maxSurge=0`、`maxUnavailable=1`。
+- 已手动创建共享型 ELB `elb-yjs-backend` 并绑定到 `backend-svc`。
+- 后端公网访问 IP：`1.92.115.240`。
+- 已通过 `curl http://1.92.115.240/api/ping` 验证云上接口返回正常。
+
 ### 5. Redis 持久化
 
 需要准备：
@@ -181,6 +203,11 @@ GET testkey
 - 写入 `testkey`
 - 删除 Redis Pod
 - 新 Pod 里还能读到 `"hello"`
+
+当前完成情况：
+
+- `redis-data-pvc` 已 Bound。
+- 已完成 `SET testkey`、删除 Redis Pod、等待新 Pod 重建、再次 `GET testkey` 成功的持久化验证。
 
 ### 6. ConfigMap Volume 挂载
 
@@ -243,6 +270,14 @@ ab -n 10000 -c 200 http://<ELB_IP>/api/ping
 - 扩容为什么有延迟
 - 冷却时间为什么必要
 - HPA 对节省资源有什么价值
+
+当前完成情况：
+
+- 已安装 Kubernetes Metrics Server，`kubectl top nodes` 可返回 CPU/内存指标。
+- 初始两个 2C4G 节点资源不足导致 Metrics Server Pending，已新增 1 个 2C8G 节点解决。
+- 已创建 `backend-hpa`，`minReplicas=1`、`maxReplicas=4`、CPU 目标 `60%`。
+- 使用 `busybox` 压测 Pod 访问 `backend-svc/api/ping`，CPU 达到约 `213%/60%`，后端副本扩容到 4。
+- 删除压测 Pod 后，CPU 下降并完成缩容验证。
 
 ## 第二部分：并行编程实战
 

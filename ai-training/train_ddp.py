@@ -13,6 +13,23 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import datasets, transforms
 
 
+def load_dataset(args, transform):
+    try:
+        print(f"rank={dist.get_rank()} loading MNIST from {args.data_dir}", flush=True)
+        return datasets.MNIST(args.data_dir, train=True, download=True, transform=transform), "mnist"
+    except Exception as exc:
+        if not args.allow_synthetic:
+            raise
+        print(f"rank={dist.get_rank()} MNIST download failed: {exc}", flush=True)
+        print(f"rank={dist.get_rank()} falling back to offline MNIST-shaped synthetic data", flush=True)
+        return datasets.FakeData(
+            size=args.synthetic_size,
+            image_size=(1, 28, 28),
+            num_classes=10,
+            transform=transform,
+        ), "synthetic-mnist-shaped"
+
+
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
@@ -48,7 +65,7 @@ def train(args):
         device = torch.device("cpu")
 
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    dataset = datasets.MNIST(args.data_dir, train=True, download=True, transform=transform)
+    dataset, dataset_name = load_dataset(args, transform)
     dist.barrier()
 
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True)
@@ -81,7 +98,11 @@ def train(args):
 
     elapsed = time.perf_counter() - t0
     if rank == 0:
-        print(f"mode=ddp workers={world_size} epochs={args.epochs} device={device} train_time={elapsed:.3f}s", flush=True)
+        print(
+            f"mode=ddp dataset={dataset_name} samples={len(dataset)} workers={world_size} "
+            f"epochs={args.epochs} device={device} train_time={elapsed:.3f}s",
+            flush=True,
+        )
 
     dist.destroy_process_group()
 
@@ -93,6 +114,8 @@ def main():
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--cpu", action="store_true")
+    parser.add_argument("--allow-synthetic", action="store_true")
+    parser.add_argument("--synthetic-size", type=int, default=6000)
     args = parser.parse_args()
     train(args)
 

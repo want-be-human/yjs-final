@@ -5,8 +5,8 @@
 需要在 GitHub 仓库里配置 Secrets：
 
 ```text
-SWR_REGISTRY=swr.<region>.myhuaweicloud.com
-SWR_ORG=<your-organization>
+SWR_REGISTRY=swr.cn-north-4.myhuaweicloud.com
+SWR_ORG=yjs-final-2023112473
 SWR_USERNAME=<region>@<AK>
 SWR_PASSWORD=<SWR 登录指令里的临时 Token>
 KUBE_CONFIG=<base64 后的 kubeconfig 内容>
@@ -30,3 +30,14 @@ base64 -w 0 ~/.kube/config
 - SWR 中新 tag 的后端和前端镜像。
 - `kubectl get deployment backend frontend -o wide` 或 `kubectl describe deployment`，能看到镜像 tag 已更新。
 - 浏览器或 curl 验证新部署仍能访问 `/api/ping`。
+
+当前云资源状态：
+
+- CCE 集群 `yjs-final-cluster` 已创建，WSL 中 `kubectl get nodes -o wide` 已能看到 2 个 Ready 节点。
+- SWR 组织 `yjs-final-2023112473` 已创建。
+- `yjs-backend:v1` 和 `yjs-frontend:v1` 已手动推送到 SWR，可作为首次部署和后续 CI/CD 对照基线。
+
+注意：
+
+- `KUBE_CONFIG` 来自公网访问版 kubeconfig，内容敏感，只能放 GitHub Secrets，不能提交到仓库。
+- SWR 临时登录指令有效期有限，若流水线运行时过期，需要重新生成并更新 `SWR_PASSWORD`。

@@ -5,6 +5,7 @@ metadata:
   namespace: default
   annotations:
     kubernetes.io/elb.class: union
+    kubernetes.io/elb.id: b17243e5-008d-4407-bb98-8b37d4a8d2d9
 spec:
   type: LoadBalancer
   selector:

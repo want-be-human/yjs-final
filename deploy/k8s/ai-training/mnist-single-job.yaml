@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: trainer
-          image: swr.cn-north-4.myhuaweicloud.com/<YOUR_ORG>/mnist-ddp:v1
+          image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/mnist-ddp:v3
           imagePullPolicy: IfNotPresent
           command:
             - python
@@ -19,11 +19,16 @@ spec:
             - "2"
             - --batch-size
             - "128"
+            - --data-dir
+            - /work/data
             - --cpu
+            - --allow-synthetic
+            - --synthetic-size
+            - "6000"
           resources:
             requests:
+              cpu: "300m"
+              memory: "768Mi"
+            limits:
               cpu: "1"
               memory: "2Gi"
-            limits:
-              cpu: "2"
-              memory: "4Gi"
