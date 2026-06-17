@@ -1,162 +1,149 @@
-# 成员 B 本地完成记录
+# 成员 B 完成记录
 
-## 已对照任务书完成的本地部分
+## 当前基准
 
-### 任务1 应用容器化
+- 运行环境以 WSL 为准，Windows 只作为编辑环境。
+- 当前华为云区域为 `cn-north-4`，SWR 组织为 `yjs-final`。
+- CCE 集群为 `yjs-final-cluster`，kubeconfig 已能在本地访问集群。
+- 新账号环境已经重新部署并完成主要云上验证，截图仍需按报告要求补齐。
 
-- 前端页面在 `app/frontend/static/index.html`，已包含学号和姓名。
-- 前端 Dockerfile 在 `app/frontend/Dockerfile.frontend`，按任务书 Nginx 静态页模板写。
-- Nginx 反向代理配置在 `app/frontend/nginx.conf`，本地走 `backend:5000`。
-- `docker-compose.yml` 已包含前端、后端和 Redis，本地运行需要在 WSL 里执行。
-- 已在 WSL 中执行 `docker compose up --build -d`，三个容器均启动成功。
-- 已通过 `curl http://localhost:8080/api/ping` 验证 Nginx 到 Flask 到 Redis 链路，返回 `status=ok`、`redis=ok`。
-- 已将前端页面学生信息更新为 `2023112473 谢梦瑶`。
-- 已保存本地前端接口截图和后端 `/api/ping` 日志截图到 `docs/screenshots/`。
-- 已在华为云 SWR 华北-北京四创建组织 `yjs-final-2023112473`。
-- 已使用临时登录指令登录 SWR，并推送前端、后端镜像。
-- 已推送后端镜像：`swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1`。
-- 已推送前端镜像：`swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-frontend:v1`。
-- 普通 `docker push` 后端镜像时遇到 SWR manifest 解析错误，已改用 `docker buildx build --platform linux/amd64 --provenance=false --push` 解决。
+## 任务 1 应用容器化
 
-待补：
-- SWR 前端/后端镜像列表截图，必须包含镜像名和 Tag。
+- 前端静态页面在 `app/frontend/static/index.html`。
+- 后端 Flask 应用在 `app/backend/app.py`，`/api/ping` 会检查 Redis。
+- 前端、后端 Dockerfile 分别为 `app/frontend/Dockerfile.frontend` 和 `app/backend/Dockerfile.backend`。
+- `docker-compose.yml` 已包含 frontend、backend、redis，本地可用于联调。
+- K8s 镜像地址已切到 `swr.cn-north-4.myhuaweicloud.com/yjs-final/`。
 
-### 任务2 CCE 集群搭建
+已验证：
 
-- 已在华为云华北-北京四创建 CCE Standard 集群 `yjs-final-cluster`。
-- Kubernetes 版本为 `v1.35.3-r0-35.0.8`，满足任务书要求的 `>= 1.27`。
-- 已创建 2 个 Worker 节点，节点规格为 `c9.large.2`（2 vCPU / 4 GiB），操作系统为 Ubuntu 22.04，容器运行时为 containerd。
-- HPA 阶段因资源不足新增 1 个 2 vCPU / 8 GiB Worker 节点，用于支撑 Metrics Server、压测和后续 MPI/监控实验。
-- 已创建 VPC `vpc-yjs-final`（`192.168.0.0/16`）和子网 `subnet-yjs-final`（`192.168.0.0/24`）。
-- 已为 CCE API Server 临时绑定 1 Mbit/s 按需 EIP，下载公网访问版 kubeconfig。
-- 已在 WSL 中配置 `~/.kube/config`，`kubectl get nodes -o wide` 能看到两个节点均为 `Ready`。
-- 已执行 `kubectl get pods -A`，确认 `coredns`、`everest-csi`、`icagent`、`node-local-dns` 等系统 Pod 为 `Running`。
+- 前端、后端镜像已推送到新账号 SWR。
+- 后端公网 `/api/ping` 已返回 `status=ok`，Redis 状态为 `ok`。
 
-待补：
-- 控制台节点 Ready 截图和 WSL 终端 `kubectl get nodes -o wide` 截图归档。
-- 实验结束后释放 CCE 集群、节点、EIP、ELB 和云硬盘，避免持续计费。
+## 任务 2 CCE 集群搭建
 
-### 任务3 应用部署
+- 已创建 CCE Standard 集群 `yjs-final-cluster`。
+- 已验证 kubeconfig 可访问集群，节点状态为 Ready。
+- 当前节点为 3 个 Worker，满足应用、HPA、MPI、监控的基本运行需要。
 
-- `deploy/k8s/app/service.yaml` 已写后端 `LoadBalancer` Service，并加 `kubernetes.io/elb.class: union`。
-- 同文件已写 Redis `ClusterIP` Service。
-- 为了能完整 apply，本地补了后端、Redis、ConfigMap、Secret、PVC 等 YAML，其中任务书模板文件名已对齐为 `deployment.yaml`、`configmap.yaml`、`secret.yaml`。
-- 已将后端和前端 Deployment 镜像地址替换为 `yjs-final-2023112473` 下的真实 SWR 镜像。
-- 已在 CCE 上部署 backend、frontend、Redis、PVC、ConfigMap、Secret 和 Service。
-- 因默认 Service 未自动创建 ELB，已手动创建共享型 ELB `elb-yjs-backend`，并在 `backend-svc` 注解中绑定负载均衡器 ID。
-- `backend-svc` 已获得公网 IP `1.92.115.240`，通过 `curl http://1.92.115.240/api/ping` 验证返回成功。
-- 部署过程中因小规格节点资源紧张，将后端和 Redis 的 requests/limits 调小，并将后端滚动更新策略改为 `maxSurge=0`、`maxUnavailable=1`，避免滚动更新时额外 Pod 卡住。
+待补证据：
 
-待补：
-- 归档 CCE 上 `kubectl get deploy`、`kubectl get pods -o wide`、`kubectl get svc` 和 `/api/ping` 成功访问截图。
+- CCE 控制台集群概览截图。
+- `kubectl get nodes -o wide` 截图。
+- 实验结束后释放 CCE、节点、ELB、EIP、云硬盘等按需资源。
 
-### 任务4 Redis 持久化
+## 任务 3 应用部署
 
-- 已创建 Redis PVC `redis-data-pvc`，状态为 `Bound`，容量为 `10Gi`，StorageClass 为 `csi-disk`。
-- 已完成持久化验证：写入 `testkey`，删除 Redis Pod，等待新 Pod 自动重建后再次读取 `testkey` 成功。
+- `deploy/k8s/app/deployment.yaml` 为后端 Deployment。
+- `deploy/k8s/app/frontend-deployment.yaml` 为前端 Deployment。
+- `deploy/k8s/app/service.yaml` 包含后端 LoadBalancer Service 和 Redis ClusterIP Service。
+- `deploy/k8s/app/configmap.yaml`、`secret.yaml`、`redis-deployment.yaml`、`redis-pvc.yaml` 已准备。
+- 已绑定新账号 ELB，公网地址为 `114.116.194.77`。
 
-待补：
-- 归档 PVC Bound、写入 key、删除 Pod、新 Pod 读取 key 成功的截图。
+已验证：
 
-### 任务5 ConfigMap Volume
+- `backend`、`frontend`、`redis` Pod 均为 Running。
+- `backend-svc` 已绑定公网 ELB，`/api/ping` 访问成功。
 
-- `deploy/k8s/app/nginx-configmap.yaml` 已把完整 Nginx 配置放入 ConfigMap。
-- `deploy/k8s/app/frontend-deployment.yaml` 已把 ConfigMap 挂载到 `/etc/nginx/conf.d`。
-- 没有使用 `subPath`，因为 `subPath` 挂单文件时 ConfigMap 更新不会自动同步到容器内文件，不符合任务书要求。
+## 任务 4 Redis 持久化
 
-待补：
-- CCE 上 apply 后 exec 进前端 Pod：`cat /etc/nginx/conf.d/default.conf` 截图。
-- 把 ConfigMap 里的后端端口临时改成错误值再 apply，验证 Pod 内文件变更的截图。
+- Redis 使用 `redis-data-pvc`，StorageClass 为 `csi-disk`。
+- Redis Deployment 使用 `Recreate` 策略，避免同一块云硬盘被新旧 Pod 同时挂载。
 
-### 任务6 HPA
+待补证据：
 
-- `deploy/k8s/app/backend-hpa.yaml` 已按任务书写：`minReplicas=1`，`maxReplicas=4`，CPU 目标 60%。
-- 已安装 Kubernetes Metrics Server 插件。
-- 因 Metrics Server 初始 Pending 且事件显示 `Insufficient memory`，按任务书建议新增 1 个 2 vCPU / 8 GiB 节点后插件 Running。
-- `kubectl top nodes` 已能看到节点 CPU 和内存指标。
-- 已创建 `backend-hpa`，指标显示正常，例如 `cpu: 2%/60%`。
-- 使用 `busybox` 压测 Pod 持续访问 `backend-svc/api/ping`，HPA 触发扩容，CPU 曾升至约 `213%/60%`，后端副本扩容到 4。
-- 停止压测并删除 load-generator Pod 后，HPA 完成缩容验证。
+- PVC Bound 截图。
+- 写入 key、删除 Redis Pod、重建后读取 key 成功的截图。
+已完成云上验证：写入 key、删除 Redis Pod、重建后读取 key 成功。
 
-待补：
-- 归档 `kubectl top nodes`、HPA 创建、扩容到 4、停止压测后缩容的截图。
+## 任务 5 ConfigMap Volume
 
-### B-1 并行算法实现
+- `deploy/k8s/app/nginx-configmap.yaml` 保存 Nginx 配置。
+- 前端 Deployment 将 ConfigMap 挂载到 `/etc/nginx/conf.d`。
+- 没有使用 `subPath`，方便 ConfigMap 更新后同步到容器内文件。
 
-- `mpi/integral_serial.py` 是串行梯形法。
-- `mpi/integral_mpi.py` 是阻塞 MPI 版，使用 `scatter` 分发区间、`reduce` 汇总积分。
-- `mpi/pi_mpi.py` 是任务书 B-0 的 MPIJob 入门验证示例。
-- `mpi/Dockerfile` 可构建包含本仓库 MPI 脚本的 `yjs-mpi:v2` 镜像，避免 MPIJob 引用的 `/opt/mpi/*.py` 在基础镜像里不存在。
-- `docs/report-notes/mpi-communication.md` 已放通信示意素材。
-- 已在 WSL 中安装 MPI/`mpi4py` 运行串行版和 4 进程 MPI 版，完成结果一致性验证。
-- 已保存截图：`docs/screenshots/mpi-b1-serial-vs-parallel-consistency.png`。
+待补证据：
 
-云上补充：
-- 已在 CCE 上部署 MPI Operator，截图为 `docs/screenshots/cce-mpi-operator-running.png`。
-- 已构建并推送 `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2`，镜像包含本仓库 MPI 脚本、`mpi4py`、OpenMPI 和 `openssh-server`。
-- 已将 MPIJob `apiVersion` 修正为 `kubeflow.org/v2beta1`，并在 `mpirun` 中加入 `--allow-run-as-root` 和 `--oversubscribe`。
-- 已在 CCE 上运行 `mpi-pi` MPIJob，Launcher Job 完成状态为 `Complete 1/1`。
-- 已保存截图：`docs/screenshots/cce-mpijob-pods-completed.png`、`docs/screenshots/cce-mpijob-job-complete.png`、`docs/screenshots/cce-mpijob-pi-log.png`。
+- `kubectl exec` 查看 `/etc/nginx/conf.d/default.conf` 截图。
+- 修改 ConfigMap 后容器内文件更新截图。
+已完成云上验证：前端容器内 `/etc/nginx/conf.d/default.conf` 能看到 ConfigMap 挂载内容，更新后文件同步生效。
 
-建议补充：
-- 可再补一张 SWR 控制台 `yjs-mpi:v2` 标签截图，命名为 `docs/screenshots/cce-swr-mpi-v2.png`。
+## 任务 6 HPA
 
-### B-2 性能测试与 Amdahl 分析
+- `deploy/k8s/app/backend-hpa.yaml` 已配置 `minReplicas=1`、`maxReplicas=4`、CPU 目标 60%。
+- 需要集群 metrics 能正常返回，才能完成扩缩容验证。
+- 新账号中 metrics-server 已部署，HPA 已完成扩容和缩容验证。
 
-- `mpi/bench_mpi.py` 可按 1、2、4 进程各跑 3 次并生成 CSV。
-- `mpi/plot_amdahl.py` 可根据 CSV 画实测加速比和 Amdahl 理论加速比双折线图。
-- 已在 WSL 中按 `steps=10000000`、每组重复 3 次完成真实性能测试。
-- 已生成 `docs/report-notes/mpi-benchmark.csv`、`docs/report-notes/mpi-benchmark.log` 和 `docs/report-notes/mpi-amdahl.png`。
-- 当前实测结果：1 进程平均 `0.767674s`，2 进程平均 `0.379951s`，4 进程平均 `0.212694s`，4 进程加速比约 `3.6093`。
+待补证据：
 
-待补：
-- 报告里结合真实数据补充加速比与 Amdahl 理论差距分析。
+- `kubectl top nodes` 截图。
+- HPA 创建、压测扩容、停止压测后缩容截图。
+已完成云上验证：压测时后端扩到 4 个副本，停止压测后缩回 1 个副本。
 
-### B-3 非阻塞通信优化
+## B-0 MPIJob 示例
 
-- `mpi/integral_mpi_nonblocking.py` 已用 `isend/irecv` 改写任务分发和结果回传。
-- `mpi/compare_blocking_nonblocking.py` 可对比 4 进程下阻塞版和非阻塞版时间。
-- 已在 WSL 中完成 4 进程阻塞版与非阻塞版对比，并保存截图：`docs/screenshots/mpi-b3-blocking-vs-nonblocking.png`。
+- MPI Operator 使用离线包里的 `mpi-operator.yaml`。
+- `deploy/k8s/mpi/mpijob.yaml` 使用 `kubeflow.org/v2beta1`。
+- MPI 镜像优先使用老师提供的 `mpi4py:latest`，重新 tag 到个人 SWR。
+- 本仓库 Python 脚本通过 `mpi-scripts` ConfigMap 挂载到 MPIJob Pod。
 
-待补：
-- 根据真实时间写适用条件分析。
+待补证据：
 
-### C-1 分布式 AI 训练
+- MPI Operator Running 截图。
+- MPIJob Pod 完成截图。
+- launcher 日志中 π 计算结果截图。
+已完成云上验证：`mpi-pi` 和 `integral-mpi` 均成功，`integral-mpi` 输出 `pi=3.141592653590`。
 
-- `ai-training/train_single.py` 是单机 MNIST CNN 训练脚本。
-- `ai-training/train_ddp.py` 是 PyTorch DDP 版本。
-- `ai-training/Dockerfile` 已准备训练镜像构建文件。
-- `deploy/k8s/ai-training/mnist-single-job.yaml` 是单机基线 Job。
-- `deploy/k8s/ai-training/mnist-ddp-job.yaml` 是 2 Worker Pod 的 DDP Indexed Job。
-- `docs/report-notes/c1-distributed-ai-training.md` 已写专题主体，并补入真实训练时间和分析。
-- 已构建并推送 `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/mnist-ddp:v3`。
-- 镜像构建阶段已预下载真实 MNIST 数据到 `/work/data`，避免 CCE Pod 运行时访问 MNIST 官方源超时。
-- 单机 Job 训练结果：`mode=single dataset=mnist samples=60000 epochs=2 device=cpu train_time=35.509s`。
-- 2 Worker DDP Job 训练结果：`mode=ddp dataset=mnist samples=60000 workers=2 epochs=2 device=cpu train_time=39.128s`。
-- 加速比为 `0.9074`，DDP 略慢，原因是小模型小数据集下通信和调度开销超过并行计算收益。
+## B-1 到 B-3 并行算法
 
-建议补充：
-- 确认 `docs/screenshots/` 中已保存 `c1-mnist-single-pod-completed.png`、`c1-mnist-single-log.png`、`c1-mnist-ddp-pods-completed.png`、`c1-mnist-ddp-log.png`。
+- `mpi/integral_serial.py`：串行梯形积分。
+- `mpi/integral_mpi.py`：阻塞 MPI 版本。
+- `mpi/integral_mpi_nonblocking.py`：非阻塞 MPI 版本。
+- `mpi/bench_mpi.py`：1、2、4 进程性能测试。
+- `mpi/plot_amdahl.py`：生成实测加速比和 Amdahl 理论曲线。
+- `mpi/compare_blocking_nonblocking.py`：对比阻塞和非阻塞版本。
+- 本地已有历史测试数据和图表，换新云环境不影响这部分本地结论。
 
-### 附加题 1 监控系统
+待补证据：
 
-- 已确认离线包提供 `monitoring-all.tar`、`kube-prometheus-stack-83.7.0.tgz` 和 `monitoring-values.yaml`。
-- 已在 `deploy/k8s/monitoring/` 放置部署说明和 values 模板。
-- 已整理 `docs/report-notes/monitoring-report-notes.md`，包含 Prometheus Pull 原理、截图清单和指标说明。
+- 把本地终端运行截图和 `mpi-amdahl.png` 放入正式报告。
+- 报告中说明小规模任务下非阻塞版本不一定更快，原因是通信无法和计算充分重叠。
 
-待补：
-- 把监控镜像加载、重新 tag 到个人 SWR 并推送。
-- 替换 `<region>` 和 `<your-organization>`。
-- CCE 上安装 kube-prometheus-stack。
-- 保存 Grafana 节点 CPU 折线图和 Pod 内存柱状图截图。
+## C-1 分布式 AI 训练
 
-### 附加题 2 CI/CD 流水线
+- `ai-training/train_single.py` 为单机训练脚本。
+- `ai-training/train_ddp.py` 为 PyTorch DDP 训练脚本。
+- `deploy/k8s/ai-training/mnist-single-job.yaml` 为单机 Job。
+- `deploy/k8s/ai-training/mnist-ddp-job.yaml` 为 2 Worker Indexed Job。
+- 当前镜像地址为 `swr.cn-north-4.myhuaweicloud.com/yjs-final/mnist-ddp:v3`。
+- 新账号云上结果：单机 `51.534s`，2 Worker DDP `43.475s`，加速比约 `1.19`。
 
-- 已新增 `.github/workflows/deploy.yml`。
-- Workflow 会构建前端/后端镜像、推送 SWR，并更新 `backend`、`frontend` Deployment 镜像 tag。
-- 已整理 `docs/report-notes/cicd-report-notes.md`，包含 Secrets 清单和报告说明点。
+已完成云上验证：单机 Job 和 2 Worker DDP Job 均 Completed，日志已输出训练时间。
 
-待补：
-- 在 GitHub 仓库配置 `SWR_REGISTRY`、`SWR_ORG`、`SWR_USERNAME`、`SWR_PASSWORD`、`KUBE_CONFIG`。
-- 首次运行前确认 CCE 上已有 `backend` 和 `frontend` Deployment。
-- 保存 GitHub Actions Passed、SWR 新 tag、Deployment 镜像更新截图。
+## 附加题 1 监控系统
+
+- 离线包包含 `monitoring-all.tar`、`kube-prometheus-stack-83.7.0.tgz` 和 values。
+- `deploy/k8s/monitoring/monitoring-values.yaml` 已切到 `cn-north-4/yjs-final`。
+- CCE 自带旧版 Prometheus Operator CRD 与新版 Chart 字段不兼容，当前采用 Chart 部署 Grafana、自建 `yjs-prometheus` 采集指标。
+- Grafana datasource 已连到 `yjs-prometheus`，Prometheus 已能查询节点 CPU 和 Pod 内存指标。
+- 报告素材在 `docs/report-notes/monitoring-report-notes.md`。
+
+待补截图：
+
+- Helm 安装成功截图。
+- Grafana 节点 CPU 折线图。
+- Grafana Pod 内存柱状图。
+- 报告中说明 Prometheus Pull 原理和至少 3 个指标含义。
+
+## 附加题 2 CI/CD 流水线
+
+- workflow 文件为 `.github/workflows/deploy.yml`。
+- workflow 会构建前端/后端镜像，推送 SWR，然后更新 `backend`、`frontend` Deployment。
+- 报告素材在 `docs/report-notes/cicd-report-notes.md`。
+
+待补证据：
+
+- GitHub 中需要 5 个独立 Repository secrets：`SWR_REGISTRY`、`SWR_ORG`、`SWR_USERNAME`、`SWR_PASSWORD`、`KUBE_CONFIG`。只配置 `YJS_SECRET` 时，现有 workflow 不会读取。
+- GitHub Actions Passed 截图。
+- SWR 新 tag 截图。
+- Deployment 镜像 tag 更新截图。

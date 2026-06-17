@@ -1,4 +1,4 @@
-apiVersion: kubeflow.org/v2beta1
+﻿apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: integral-mpi
@@ -12,27 +12,46 @@ spec:
       replicas: 1
       template:
         spec:
+          imagePullSecrets:
+            - name: swr-secret
           containers:
             - name: launcher
-              image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
+              image: swr.cn-north-4.myhuaweicloud.com/yjs-final/mpi4py:latest
               command:
                 - mpirun
-                - --allow-run-as-root
-                - --oversubscribe
                 - -n
                 - "4"
                 - python
                 - /opt/mpi/integral_mpi.py
                 - --steps
                 - "10000000"
+              volumeMounts:
+                - name: mpi-scripts
+                  mountPath: /opt/mpi
+          volumes:
+            - name: mpi-scripts
+              configMap:
+                name: mpi-scripts
     Worker:
       replicas: 2
       template:
         spec:
+          imagePullSecrets:
+            - name: swr-secret
           containers:
             - name: worker
-              image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
+              image: swr.cn-north-4.myhuaweicloud.com/yjs-final/mpi4py:latest
+              volumeMounts:
+                - name: mpi-scripts
+                  mountPath: /opt/mpi
               resources:
                 requests:
-                  cpu: "1"
-                  memory: "1Gi"
+                  cpu: "10m"
+                  memory: "32Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"
+          volumes:
+            - name: mpi-scripts
+              configMap:
+                name: mpi-scripts

@@ -19,3 +19,10 @@ tmp/
 *.tar
 *.tar.gz
 *.zip
+
+# local cloud credentials
+yjs-final-cluster-kubeconfig.yaml
+kubeconfig*.yaml
+config
+certfile.cert
+keyfile.key

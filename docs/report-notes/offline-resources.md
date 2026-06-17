@@ -7,7 +7,7 @@
 ```text
 Region: cn-north-4（华北-北京四）
 SWR Registry: swr.cn-north-4.myhuaweicloud.com
-SWR Organization: yjs-final-2023112473
+SWR Organization: yjs-final
 CCE Cluster: yjs-final-cluster
 Kubernetes Version: v1.35.3-r0-35.0.8
 Worker Nodes: 3 个，Ubuntu 22.04，containerd
@@ -16,9 +16,9 @@ Worker Nodes: 3 个，Ubuntu 22.04，containerd
 前后端镜像已经推送到 SWR：
 
 ```text
-swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1
-swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-frontend:v1
-swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
+swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-backend:v1
+swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-frontend:v1
+swr.cn-north-4.myhuaweicloud.com/yjs-final/mpi4py:latest
 ```
 
 普通 `docker push` 后端镜像时曾遇到 `Invalid image, fail to parse 'manifest.json'`，后续使用兼容命令重新构建并推送：
@@ -27,7 +27,7 @@ swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-mpi:v2
 docker buildx build \
   --platform linux/amd64 \
   --provenance=false \
-  -t swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1 \
+  -t swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-backend:v1 \
   -f app/backend/Dockerfile.backend app/backend \
   --push
 ```
@@ -43,16 +43,15 @@ docker buildx build \
 实际使用顺序：
 
 ```bash
-cd /mnt/d/desktop/云计算/yjs-final
+SWR="swr.cn-north-4.myhuaweicloud.com/yjs-final"
+docker load -i 离线包/mpi/mpi4py-latest.tar
+docker tag swr.cn-east-3.myhuaweicloud.com/cloud-course-2025212245/mpi4py:latest ${SWR}/mpi4py:latest
+docker push ${SWR}/mpi4py:latest
 
-SWR="swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473"
-docker buildx build \
-  --platform linux/amd64 \
-  --provenance=false \
-  --push \
-  -t ${SWR}/yjs-mpi:v2 \
-  -f mpi/Dockerfile mpi
-
+kubectl create configmap mpi-scripts \
+  --from-file=mpi/pi_mpi.py \
+  --from-file=mpi/integral_mpi.py \
+  --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f 离线包/mpi/mpi-operator.yaml
 kubectl apply -f deploy/k8s/mpi/mpijob.yaml
 ```
@@ -61,7 +60,7 @@ MPIJob 运行中处理过的问题：
 
 - MPI Operator CRD 使用 `kubeflow.org/v2beta1`，因此仓库里的 MPIJob YAML 已改为该版本。
 - SWR 普通 push 曾出现 manifest 解析问题，统一使用 `docker buildx build --platform linux/amd64 --provenance=false --push`。
-- MPI Worker 需要 `/usr/sbin/sshd`，镜像中已加入 `openssh-server`。
+- 本仓库脚本不重新打进老师镜像，改用 `mpi-scripts` ConfigMap 挂载到 `/opt/mpi`。
 - OpenMPI 在容器 root 用户下运行需要 `--allow-run-as-root`。
 - CCE 小规格节点上可用 slot 不足时，`mpirun` 增加 `--oversubscribe`。
 
@@ -82,7 +81,7 @@ MPIJob 运行中处理过的问题：
 离线包/monitoring/monitoring-values.yaml
 ```
 
-需要先加载镜像、重新 tag 到个人 SWR、推送，再用 Helm 安装。仓库里保留了 `deploy/k8s/monitoring/monitoring-values.template.yaml`，后续需要把 `<region>` 替换为 `cn-north-4`，把 `<your-organization>` 替换为 `yjs-final-2023112473` 后使用。
+需要先加载镜像、重新 tag 到个人 SWR、推送，再用 Helm 安装。仓库里保留了 `deploy/k8s/monitoring/monitoring-values.template.yaml`，后续需要把 `<region>` 替换为 `cn-north-4`，把 `<your-organization>` 替换为 `yjs-final` 后使用。
 
 ```bash
 helm upgrade --install monitoring 离线包/monitoring/kube-prometheus-stack-83.7.0.tgz \

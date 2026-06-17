@@ -104,10 +104,10 @@ kubectl get nodes -o wide
 - Worker 节点：2 个，均已通过 `kubectl get nodes -o wide` 验证为 `Ready`。
 - 节点规格：`c9.large.2`，2 vCPU / 4 GiB，Ubuntu 22.04，containerd。
 - 后续因 Metrics Server 和 HPA 压测资源不足，按任务书建议新增 1 个 2 vCPU / 8 GiB Worker 节点。
-- SWR 组织：`yjs-final-2023112473`。
+- SWR 组织：`yjs-final`。
 - 已推送镜像：
-  - `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1`
-  - `swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-frontend:v1`
+  - `swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-backend:v1`
+  - `swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-frontend:v1`
 
 ### 4. 部署应用到 CCE
 
@@ -169,8 +169,8 @@ curl http://<ELB_IP>/api/ping
 - 后端 Deployment 保持 2 个副本，前端 1 个副本，Redis 1 个副本。
 - 因节点资源紧张，后端和 Redis 的资源请求已适当调低；后端滚动更新策略改为 `maxSurge=0`、`maxUnavailable=1`。
 - 已手动创建共享型 ELB `elb-yjs-backend` 并绑定到 `backend-svc`。
-- 后端公网访问 IP：`1.92.115.240`。
-- 已通过 `curl http://1.92.115.240/api/ping` 验证云上接口返回正常。
+- 后端公网访问 IP：`114.116.194.77`。
+- 已通过 `curl http://114.116.194.77/api/ping` 验证云上接口返回正常。
 
 ### 5. Redis 持久化
 

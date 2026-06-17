@@ -1,4 +1,4 @@
-apiVersion: batch/v1
+﻿apiVersion: batch/v1
 kind: Job
 metadata:
   name: mnist-single
@@ -8,9 +8,11 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      imagePullSecrets:
+        - name: swr-secret
       containers:
         - name: trainer
-          image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/mnist-ddp:v3
+          image: swr.cn-north-4.myhuaweicloud.com/yjs-final/mnist-ddp:v3
           imagePullPolicy: IfNotPresent
           command:
             - python
@@ -27,8 +29,8 @@ spec:
             - "6000"
           resources:
             requests:
-              cpu: "300m"
-              memory: "768Mi"
+              cpu: "50m"
+              memory: "256Mi"
             limits:
               cpu: "1"
-              memory: "2Gi"
+              memory: "1536Mi"

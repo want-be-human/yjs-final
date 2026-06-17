@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
@@ -13,9 +13,11 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+        - name: swr-secret
       containers:
         - name: frontend
-          image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-frontend:v1
+          image: swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-frontend:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
@@ -18,16 +18,18 @@ spec:
       labels:
         app: backend
     spec:
+      imagePullSecrets:
+        - name: swr-secret
       containers:
         - name: backend
-          image: swr.cn-north-4.myhuaweicloud.com/yjs-final-2023112473/yjs-backend:v1
+          image: swr.cn-north-4.myhuaweicloud.com/yjs-final/yjs-backend:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
+              cpu: "20m"
+              memory: "32Mi"
             limits:
               cpu: "300m"
               memory: "256Mi"
