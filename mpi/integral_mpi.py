@@ -45,12 +45,12 @@ def main():
     t0 = MPI.Wtime()
     chunks = split_work(args.steps, size) if rank == 0 else None
 
-    # Scatter: rank 0 sends one interval slice to each process.
+    # Scatter：rank 0 将每个进程负责的积分区间分片分发出去。
     start_index, count = comm.scatter(chunks, root=0)
     h = 1.0 / args.steps
     part = local_trap(start_index, count, h)
 
-    # Reduce: every process sends its partial integral back to rank 0.
+    # Reduce：所有进程把本地积分结果发送回 rank 0 做求和。
     result = comm.reduce(part, op=MPI.SUM, root=0)
     elapsed = MPI.Wtime() - t0
 

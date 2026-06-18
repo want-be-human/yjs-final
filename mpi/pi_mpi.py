@@ -16,7 +16,7 @@ for _ in range(samples):
     if x * x + y * y <= 1.0:
         local_count += 1
 
-# Reduce: workers send hit counts to rank 0, rank 0 sums them.
+# Reduce：各进程把圆内命中次数发送到 rank 0，由 rank 0 汇总求和。
 total = comm.reduce(local_count, op=MPI.SUM, root=0)
 
 if rank == 0:

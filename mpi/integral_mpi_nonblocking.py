@@ -50,7 +50,7 @@ def main():
         chunks = split_work(args.steps, size)
         reqs = []
         for dest in range(1, size):
-            # Isend: rank 0 sends each worker its interval without waiting one by one.
+            # Isend：rank 0 非阻塞发送每个 worker 负责的积分区间分片。
             reqs.append(comm.isend(chunks[dest], dest=dest, tag=tag_work))
 
         own_start, own_count = chunks[0]
@@ -58,9 +58,10 @@ def main():
 
         result_reqs = []
         for source in range(1, size):
-            # Irecv: rank 0 posts result receives early, then waits after its own work.
+            # Irecv：rank 0 提前挂起结果接收，等自己分片算完后再统一取回。
             result_reqs.append(comm.irecv(source=source, tag=tag_result))
 
+        # Waitall：rank 0 确认任务分片都已发出，再开始汇总 worker 结果。
         MPI.Request.Waitall(reqs)
         total = own_part
         for req in result_reqs:
@@ -72,9 +73,10 @@ def main():
             f"pi={total:.12f} error={abs(math.pi - total):.3e} time={elapsed:.6f}"
         )
     else:
+        # Recv：worker 从 rank 0 接收自己负责的积分区间分片。
         start_index, count = comm.recv(source=0, tag=tag_work)
         part = local_trap(start_index, count, h)
-        # Isend: worker returns the partial result while rank 0 already waits for all results.
+        # Isend：worker 非阻塞发送本地积分结果回 rank 0。
         req = comm.isend(part, dest=0, tag=tag_result)
         req.wait()
 
